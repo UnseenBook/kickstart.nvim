@@ -167,6 +167,16 @@ vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
+-- Insert newline below and above in insert mode
+vim.keymap.set('i', '<S-CR>', '<Esc>o', { desc = 'Insert newline below and stay in insert mode', remap = true })
+vim.keymap.set('i', '<C-CR>', '<Esc>O', { desc = 'Insert newline above and stay in insert mode', remap = true })
+
+-- Add remaps to replace Home and End keys
+vim.keymap.set({ 'i', 'n', 'v' }, '<S-Left>', '<Home>', { remap = true })
+vim.keymap.set({ 'i', 'n', 'v' }, '<S-Right>', '<End>', { remap = true })
+vim.keymap.set({ 'i', 'n' }, '<M-Left>', ':tabprevious', { desc = 'Go to previous tab' })
+vim.keymap.set({ 'i', 'n' }, '<M-Right>', ':tabnext', { desc = 'Go to previous tab' })
+
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
 -- is not what someone will guess without a bit more experience.
@@ -607,6 +617,7 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         gopls = {},
+        phpactor = {},
         intelephense = {},
         basedpyright = {},
         solargraph = {},
@@ -853,6 +864,11 @@ require('lazy').setup({
     init = function()
       vim.cmd.colorscheme 'cyberdream'
     end,
+    config = function()
+      require('cyberdream').setup {
+        borderless_telescope = false,
+      }
+    end,
   },
 
   {
@@ -871,6 +887,10 @@ require('lazy').setup({
         },
       }
     end,
+  },
+
+  {
+    'HiPhish/rainbow-delimiters.nvim',
   },
 
   -- Highlight todo, notes, etc in comments
@@ -937,6 +957,25 @@ require('lazy').setup({
     --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
     --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+  },
+
+  {
+    'sindrets/diffview.nvim',
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+  },
+
+  {
+    'mbbill/undotree',
+    config = function()
+      vim.keymap.set('n', '<leader>u', vim.cmd.UndotreeToggle)
+    end,
+  },
+
+  {
+    'unblevable/quick-scope',
+    init = function()
+      vim.g.qs_highlight_on_keys = { 'f', 'F', 't', 'F' }
+    end,
   },
 
   -- The following two comments only work if you have downloaded the kickstart repo, not just copy pasted the
