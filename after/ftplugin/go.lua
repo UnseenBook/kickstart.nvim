@@ -7,3 +7,12 @@ vim.api.nvim_set_hl(0, 'LineNrBelow', lineHL)
 
 vim.bo.tabstop = 4
 vim.bo.shiftwidth = 4
+
+local format_augroup = vim.api.nvim_create_augroup('ftplugin_go_auto_format', { clear = true })
+vim.api.nvim_create_autocmd('BufWritePre', {
+  pattern = '*.go',
+  group = format_augroup,
+  callback = function()
+    require('go.format').goimports()
+  end,
+})

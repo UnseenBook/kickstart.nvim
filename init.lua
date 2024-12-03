@@ -157,48 +157,9 @@ vim.opt.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 10
 
--- [[ Basic Keymaps ]]
---  See `:help vim.keymap.set()`
+vim.opt.autowriteall = true
 
--- Clear highlights on search when pressing <Esc> in normal mode
---  See `:help hlsearch`
-vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
-
--- Diagnostic keymaps
-vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
-
--- Insert newline below and above in insert mode
-vim.keymap.set('i', '<S-CR>', '<Esc>o', { desc = 'Insert newline below and stay in insert mode', remap = true })
-vim.keymap.set('i', '<C-CR>', '<Esc>O', { desc = 'Insert newline above and stay in insert mode', remap = true })
-
--- Add remaps to replace Home and End keys
-vim.keymap.set({ 'i', 'n', 'v' }, '<S-Left>', '<Home>', { remap = true })
-vim.keymap.set({ 'i', 'n', 'v' }, '<S-Right>', '<End>', { remap = true })
-vim.keymap.set({ 'i', 'n' }, '<M-Left>', ':tabprevious', { desc = 'Go to previous tab' })
-vim.keymap.set({ 'i', 'n' }, '<M-Right>', ':tabnext', { desc = 'Go to previous tab' })
-
--- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
--- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
--- is not what someone will guess without a bit more experience.
---
--- NOTE: This won't work in all terminal emulators/tmux/etc. Try your own mapping
--- or just use <C-\><C-n> to exit terminal mode
-vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
-
--- TIP: Disable arrow keys in normal mode
-vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
-vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
-vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
-vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
-
--- Keybinds to make split navigation easier.
---  Use CTRL+<hjkl> to switch between windows
---
---  See `:help wincmd` for a list of all window commands
-vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
-vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
-vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
-vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+require 'keymaps'
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -328,7 +289,7 @@ require('lazy').setup({
         { '<leader>d', group = '[D]ocument' },
         { '<leader>r', group = '[R]ename' },
         { '<leader>s', group = '[S]earch' },
-        { '<leader>w', group = '[W]orkspace' },
+        { '<leader>W', group = '[W]orkspace' },
         { '<leader>t', group = '[T]oggle' },
         { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
       },
@@ -397,7 +358,16 @@ require('lazy').setup({
         --     i = { ['<c-enter>'] = 'to_fuzzy_refine' },
         --   },
         -- },
-        -- pickers = {}
+        defaults = {
+          layout_strategy = 'vertical',
+          path_display = { shorten = 3 },
+          dynamic_preview_title = true,
+        },
+        pickers = {
+          lsp_references = {
+            fname_width = 70,
+          },
+        },
         extensions = {
           ['ui-select'] = {
             require('telescope.themes').get_dropdown(),
@@ -426,7 +396,6 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>/', function()
         -- You can pass additional configuration to Telescope to change the theme, layout, etc.
         builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
-          winblend = 10,
           previewer = false,
         })
       end, { desc = '[/] Fuzzily search in current buffer' })
@@ -543,7 +512,10 @@ require('lazy').setup({
 
           -- Fuzzy find all the symbols in your current workspace.
           --  Similar to document symbols, except searches over your entire project.
-          map('<leader>ws', require('telescope.builtin').lsp_dynamic_workspace_symbols, '[W]orkspace [S]ymbols')
+          map('<leader>Ws', require('telescope.builtin').lsp_dynamic_workspace_symbols, '[W]orkspace [S]ymbols')
+
+          -- Show signature help under cursor
+          map('<C-p>', vim.lsp.buf.signature_help, '[P]rint signature', 'i')
 
           -- Rename the variable under your cursor.
           --  Most Language Servers support renaming across files, etc.
@@ -618,7 +590,7 @@ require('lazy').setup({
         -- clangd = {},
         gopls = {},
         phpactor = {},
-        intelephense = {},
+        -- intelephense = {},
         basedpyright = {},
         solargraph = {},
         bashls = {},
@@ -697,10 +669,10 @@ require('lazy').setup({
     opts = {
       notify_on_error = false,
       format_on_save = function(bufnr)
-        -- Disable "format_on_save lsp_fallback" for languages that don't
+        -- Enable "format_on_save lsp_fallback" for languages that don't
         -- have a well standardized coding style. You can add additional
         -- languages here or re-enable it for the disabled ones.
-        local enable_filetypes = { go = true, bash = true, lua = true }
+        local enable_filetypes = { bash = true, lua = true }
         local lsp_format_opt
         if enable_filetypes[vim.bo[bufnr].filetype] then
           lsp_format_opt = 'fallback'
@@ -766,6 +738,10 @@ require('lazy').setup({
       luasnip.config.setup {}
 
       cmp.setup {
+        window = {
+          completion = cmp.config.window.bordered(),
+          documentation = cmp.config.window.bordered(),
+        },
         snippet = {
           expand = function(args)
             luasnip.lsp_expand(args.body)
@@ -978,6 +954,50 @@ require('lazy').setup({
     end,
   },
 
+  {
+    'ray-x/guihua.lua',
+    config = function()
+      require('guihua.icons').setup {
+        icons = {
+          panel = {
+            inner_node = '├○',
+            outer_noed = '╰○',
+            bracket_left = '⟪',
+            bracket_right = '⟫',
+          },
+          syntax = {
+            var = '󰫧',
+            method = '󰊕',
+            ['function'] = '󰡱',
+            ['arrow_function'] = '󰊕',
+            parameter = '󰲴',
+            associated = '',
+            namespace = '󱎃',
+            type = '󰣙',
+            field = '󰠴',
+            interface = '',
+            module = '📦',
+            flag = '󰈽',
+          },
+        },
+      }
+    end,
+  },
+  {
+    'ray-x/go.nvim',
+    dependencies = { -- optional packages
+      'ray-x/guihua.lua',
+      'neovim/nvim-lspconfig',
+      'nvim-treesitter/nvim-treesitter',
+    },
+    config = function()
+      require('go').setup()
+    end,
+    event = { 'CmdlineEnter' },
+    ft = { 'go', 'gomod' },
+    -- build = ':lua require("go.install").update_all_sync()' -- if you need to install/update all binaries
+  },
+
   -- The following two comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
   -- place them in the correct locations.
@@ -1023,7 +1043,10 @@ require('lazy').setup({
 })
 
 if vim.g.neovide then
-  vim.o.guifont = 'Hack Nerd Font'
+  vim.o.guifont = 'Hack Nerd Font:h12'
+  vim.g.neovide_scroll_animation_length = 0.1
+  vim.g.neovide_hide_mouse_when_typing = true
+  vim.g.neovide_cursor_animate_command_line = false
 end
 
 -- The line beneath this is called `modeline`. See `:help modeline`
